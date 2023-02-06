@@ -34,9 +34,9 @@ You can:
 
 ## Installation
 ```{r install}
-#install.packages("leaflet")
+install.packages("leaflet")
 # to install the development version from Github, run
-# devtools::install_github("rstudio/leaflet")
+devtools::install_github("rstudio/leaflet")
 ```
 
 ## Basic Usage
@@ -68,7 +68,7 @@ leaflet() %>%
   addProviderTiles("Esri.WorldPhysical") %>%  # Name a specific  map from among free provider tiles
   addAwesomeMarkers(lng = c(-3, 23, 11),
                     lat = c(52, 53, 49), 
-                    popup = popup)
+                    popup = popup) #the labels of the specified addAwesomeMarkers
 
 ```
 
@@ -107,6 +107,8 @@ addLayersControl(
 
 ```
 
+*more interactive, and adding a menu for the user to click and select different views of the map*
+
 ## Sydney Harbour with a selection of ESRI backgrounds
 
 Here is a more sophisticated example or preparing a map document, where you use `grep()` to select all backgrounds originating from ESRI (global leader in spatial data market), feed them in, zoom on Sydney harbour and add widgets like map inset and measuring stick with `addMinimap()` and `addMeasure()`. 
@@ -128,6 +130,10 @@ esri <- grep("^Esri", providers, value = TRUE)
 for (provider in esri) {
   l_aus <- l_aus %>% addProviderTiles(provider, group = provider)
 }
+
+
+
+
 
 # create the basic map document
 AUSmap <- l_aus %>%
@@ -170,6 +176,53 @@ Now that we have learned the basics of using the Map Widget, let learn how to ad
 First, create a Danish equivalent of `AUSmap` with ESRI layers and call it `DKmap`
 ```{r dkmap}
 ## YOUR CODE HERE
+#Set the location and zoom level
+leaflet() %>% 
+  setView(9.5155848,55.9396761, zoom = 7) %>%
+  addTiles()  # checking I am in the right area
+
+
+# Bring in a choice of esri background layers  
+l_dk <- leaflet() %>%   # assign the base location to an object
+  setView(9.5155848,55.9396761, zoom = 7)
+
+esri <- grep("^Esri", providers, value = TRUE)
+
+# make sure you run the next three lines together else the for-loop will not work
+for (provider in esri) {
+  l_dk <- l_dk %>% addProviderTiles(provider, group = provider)
+}
+
+
+## adding a marker
+popup = c("verdens navle")
+
+# create the basic map document
+DKmap <- l_dk %>%
+  addLayersControl(baseGroups = names(esri),
+                   options = layersControlOptions(collapsed = FALSE)) %>%
+  addMiniMap(tiles = esri[[1]], toggleDisplay = TRUE,
+             position = "bottomright") %>%
+  addMeasure(
+    position = "bottomleft",
+    primaryLengthUnit = "meters",
+    primaryAreaUnit = "sqmeters",
+    activeColor = "#3D535D",
+    completedColor = "#7D4479") %>% 
+  htmlwidgets::onRender("
+                        function(el, x) {
+                        var myMap = this;
+                        myMap.on('baselayerchange',
+                        function (e) {
+                        myMap.minimap.changeLayer(L.tileLayer.provider(e.name));
+                        })
+                        }") %>% 
+addControl("", position = "topright") %>% 
+  addAwesomeMarkers(lng = c(10.20),
+                    lat = c(56.17), 
+                    popup = popup) #the labels of the specified addAwesomeMarkers
+
+DKmap # display the map document
 ```
 
 
@@ -192,9 +245,9 @@ Read in the data from googlesheet with `read_sheet()` function, specifying the p
 ```{r read-sheet}
 gs4_deauth() # if the authentication is not working for you
 
-places <- read_sheet("https://docs.google.com/spreadsheets/d/1PlxsPElZML8LZKyXbqdAYeQCDIvDps2McZx1cTVWSzI/edit#gid=1817942479",
+places <- read_sheet("https://docs.google.com/spreadsheets/d/1PlxsPElZML8LZKyXbqdAYeQCDIvDps2McZx1cTVWSzI/edit#gid=1275868348",
                      range = "SA2022",
-                     col_types = "cccnncnc")
+                     col_types = "cccnncnc") #make sure to get characters as characters and numbers as numbers :) 
 glimpse(places)
 ```
 
@@ -221,7 +274,14 @@ Try doing this in three steps
 You can find the tips for this on the [Leaflet R website](https://rstudio.github.io/leaflet/markers.html). Look for the Popups in the the left menu and Marker Clusters under markers.
 ```{r dkmap-data}
 # YOUR CODE
-
+DKmap %>% 
+  addMarkers(lng = places$Longitude, 
+             lat = places$Latitude,
+             popup = paste0("Description: ", places$Description, "<br>",
+                            "Placename: ", places$Placename,  "<br>",
+                            "Type: ", places$Type), 
+             clusterOptions = markerClusterOptions()) #note verdens navle er her også, men øhm det er bare fra noget tidligere i scriptet
+  
 ```
 
 Save your map and rejoice!
