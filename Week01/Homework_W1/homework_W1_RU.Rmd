@@ -1,0 +1,141 @@
+---
+title: "homework_W1"
+author: "Rikke Uldbæk"
+date: "2/7/2023"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+setwd("~/Library/Mobile Documents/com~apple~CloudDocs/Cognitive Science/6th semester/spatial_analytics/cds-spatial/Week01/Homework_W1")
+```
+
+### Loading packages
+```{r}
+pacman::p_load(leaflet, tidyverse, tidyr, leaflegend)
+```
+
+
+# Homework: Make an Interactive map
+Choose 1 of 2 scenarios: A trip to Chicago or temperate Rainforest near Sydney
+Your colleague has found some ruins during a hike in the temperate rainforest of the Blue Mountains and recorded them with a GPS app on her phone. She needs to map her findings but has no computer or mapping skills. Can you help?
+
+- Create a map with multiple basemaps
+```{r}
+#Set the location and zoom level
+leaflet() %>% 
+  setView(150.300003, -33.700001, zoom = 10) %>%
+  addTiles()  # checking I am in the right area (Rainforest near Sydney)
+
+
+# create multiple basemaps 
+location_sydney <- leaflet() %>%   # assign the base location to an object
+  setView(150.300003, -33.700001, zoom = 10)
+
+esri <- grep("^Esri", providers, value = TRUE)
+
+# make sure you run the next three lines together else the for-loop will not work
+for (provider in esri) {
+  location_sydney <- location_sydney %>% addProviderTiles(provider, group = provider)
+}
+
+#sydney map with multiple basemaps
+SYDmap <- location_sydney %>%
+  addLayersControl(baseGroups = names(esri),
+                   options = layersControlOptions(collapsed = FALSE))
+
+SYDmap
+```
+
+
+- Read in RCFeature data, discard features with no LatLong, and add to map, show FeatureID, FeatureType, and Description in a popup,differentiate markers by size using the Accuracy field.
+- Add elements such as minimap, and measure
+- Explore the option of clustering markers with addMarkers(clusterOptions)
+
+*I made the markers differentiate by size using Accuracy, but I cannot seem to make an informative legend to display the meaning of the size of markers.*
+
+```{r}
+#Read in the data
+RCFeature_data <-  read_csv("/Users/rikkeuldbaek/Library/Mobile Documents/com~apple~CloudDocs/Cognitive Science/6th semester/spatial_analytics/cds-spatial/Week01/data/RCFeature2018.csv")
+
+
+#discard features with no LatLong
+RCFeature_data <- RCFeature_data %>% 
+  drop_na(Latitude) %>% 
+  drop_na(Longitude)
+
+# making a minimap
+mini_map<- leaflet() %>% 
+  setView(150.300003, -33.700001, zoom = 5) %>%
+  addTiles()  # checking I am in the right area (Rainforest near Sydney)
+
+
+#Make marker that varies based on accuracy
+symbols <- makeSymbolsSize(
+  values = RCFeature_data$Accuracy,
+  shape = 'diamond',
+  color = 'blue',
+  fillColor = 'blue',
+  opacity = .5,
+  baseSize = 10
+)
+
+
+# Make colour for legend
+numPal <- colorNumeric('viridis', RCFeature_data$Accuracy)
+
+
+#add features to map, and show featureID, featureType, Description in popup,  (use accuracy field)
+SYDmap <- location_sydney %>%
+  addLayersControl(baseGroups = names(esri),
+                   options = layersControlOptions(collapsed = FALSE)) %>%
+  addMeasure(
+    position = "bottomleft",
+    primaryLengthUnit = "meters",
+    primaryAreaUnit = "sqmeters",
+    activeColor = "#3D535D",
+    completedColor = "#7D4479") %>% 
+  htmlwidgets::onRender("
+                        function(el, x) {
+                        var myMap = this;
+                        myMap.on('baselayerchange',
+                        function (e) {
+                        myMap.minimap.changeLayer(L.tileLayer.provider(e.name));
+                        })
+                        }") %>% 
+addControl("", position = "topright") %>%
+  addMarkers(icon = symbols,
+             lng = RCFeature_data$Longitude, 
+             lat = RCFeature_data$Latitude,
+             popup = paste0("FeatureID: ", RCFeature_data$FeatureID,  "<br>",
+                             "FeatureType: ", RCFeature_data$FeatureType, "<br>",
+               "Description: ", RCFeature_data$Description), 
+             clusterOptions = markerClusterOptions()) %>% 
+  addMiniMap(
+  mini_map,
+  position = "bottomright",
+  width = 100,
+  height = 100) #%>% 
+#  addLegendSize(
+#    values = RCFeature_data$Accuracy,
+#    color = 'red',
+#    fillColor = 'red',
+#    opacity = .5,
+#    title = 'Accuracy',
+#    shape = 'diamond',
+#    orientation = 'horizontal',
+#    breaks = 10)
+
+#show the map
+SYDmap
+
+
+```
+
+- Is clustering markers a good idea?
+You have to zoom relatively much to actually see the points within the cluster, and this worsens the overview of the rest of the points in other clusters, since you zoom too much. The clustering markers then make it really hard to see the points relative to each other in a bigger picture. However, if you have a lot of markers (and know how to work the aesthetics of them) the clustering can potentially be a useful tool, as it might be easier to detect patterns this way. 
+
+
+
+
