@@ -22,6 +22,8 @@ opts_chunk$set(echo=FALSE,
                warning=FALSE)
 opts_knit$set(width=75)
 options(scipen=999)
+
+setwd("~/Library/Mobile Documents/com~apple~CloudDocs/Cognitive Science/6th semester/spatial_analytics/cds-spatial/Week02")
 ```
 
 # Introduction into GIS in R
@@ -50,29 +52,52 @@ In this exercise you will read in three shapefiles (parks, playgrounds, and fore
 
 ```{r load, eval=FALSE, echo=TRUE}
 # Load the sf package
-___(___)
+pacman::p_load(sf, GDAL, GEOS, PROJ.4)
+install.packages("raster")
+library(raster)
+
 
 # Read in the forests shapefile
-forests <- ___("../data/forests.shp")
+forests <- read_sf("../data/forests.shp")
 
 # Read in the parks shapefile
-parks <- ___(___)
+parks <- read_sf("../data/parks.shp" )
 
 # Read in the playgrounds shapefile
-playgrounds <- ___(___)
+playgrounds <- read_sf("../data/playgrounds4326.shp")
 
 # Read in the shelters json
-shelters <- ___(___)
+shelters <- st_read("../data/shelters.json")
 
 # View the first few features of all layers
-___(___)
+forests # p
+head(parks)
+head(playground)
+head(shelters)
+
+#crs
+crs(forests)
+crs(parks)
+crs(playgrounds)
+crs(shelters)
 ```
 
 ## Questions: 
 
 1. How many features does each layer contain and what kind of geometry are they?
-2. What is the CRS value in these objects?
+- feature = how many shapes are in each line (rows in the dataset) 
+Forests: 32 features (rows)
+Parks: 47 festures (rows)
+playgrounds : 51 features (rows)
+shelters: 19 (rows)
 
+- layers = layer is just the object (i.e., forrest, park, playground and shelter) 
+
+2. What is the CRS value in these objects?
+- Forests: PROJCRS["ETRS89 / UTM zone 32N" and ID["EPSG",25832]] 
+- Parks: PROJCRS["ETRS(datum)89 / UTM zone 32N" and ID["EPSG",25832]] 
+- Playgrounds: None *you have to define this later, so it is consistent with the other layers* 
+- Shelters: PROJCRS["ETRS89 / UTM zone 32N" and ID["EPSG",25832]] 
 
 Well done, now you should see how easy it can be to read in shapefiles and you got your first taste of what an sf object looks like.
 
@@ -92,23 +117,21 @@ Spatial objects in `sf` are just data frames with some special properties. This 
 * Use the `head()` function to check which variables exist in your new data frame. Does the data frame only have the `navn` and `areal_m2` columns (the answer is no, why)?
 
 ```{r wrangle-parks, eval=FALSE, echo=TRUE}
-# Load the sf package
-___
-
-# ... and the dplyr package
-___
+# Load the sf and dplyr package
+pacman::p_load(dplyr)
 
 # Use filter() to limit to over5ha parks
-___
+over5ha <- parks %>% 
+  filter(areal_m2 > 50000)
 
 # Count the number of rows
-___(over5ha)
+nrow(over5ha) #17 rows
 
 # Limit to navn and areal_m2 variables
-over5_lim <- over5ha %>% ___(navn, areal_m2) 
+over5_lim <- over5ha %>% select(navn, areal_m2) 
 
 # Use head() to look at the first few records
-___(over5_lim)
+head(over5_lim)
 ```
 
 Great! You can see why the `sf` package is so nice – your spatial objects are data frames that you can smoothly manipulate with `dplyr`. The number of parks over 5ha is 17
@@ -132,21 +155,23 @@ In this exercise, you will convert the data frame to what's called a `tibble` wi
 * Pull out the third observation from columns `a` and `b` using `base` R (you'll need square brackets like `[3]`).
 
 ```{r geometry, eval = FALSE, echo = TRUE}
+pacman::p_load(tidyverse)
+
 # Create a standard, non-spatial data frame with one column
-df <- ___(a = 1:3)
+df <- data.frame(a = 1:3)
 
 # Add a list column to your data frame
-df$b <- ___(1:4, 1:5, 1:10)
+df$b <- list(1:4, 1:5, 1:10)
 
 # Look at your data frame with head
-___(df)
+head(df)
 
 # Convert your data frame to a tibble and print on console
-___(df)
+df <- tibble::as_tibble(df)
 
 # Pull out the third observation from both columns individually
-df$___[___]
-df$___[___]
+df$a[3]
+df$b[3]
 ```
 You now have a better sense of what a list column is. You can see how it can be used to store far more information in a single variable than other types of columns. These list-columns are how `sf` stores detailed geographic information on each feature in a single record. Converting the data frame to a tibble is not necessary but a tibble can provide a better print out of the object.
 
@@ -191,19 +216,23 @@ length(which(result > val))
 
 ```{r forests, eval=FALSE, echo=TRUE}
 # Compute the areas of the forests
-areas <- ___(forests)
+areas <- st_area(forests)
 
 # Create a quick histogram of the areas using hist
-___(___)
+hist(areas, main = "Areas in Forests")
+
+areas <- unclass(areas)
 
 # Filter to forests greater than 30000 (square meters)
-big_forests <- ___ %>% ___(___(___) > 200000)
+big_forests <- forests %>%
+  filter(unclass(areas) >30000)
+
 
 # Can you plot the forests with their names?
-
+plot(big_forests["navn"], main = "Name")
 
 # Plot just the geometry of big_forests
-___(___(big_forests))
+plot(st_geometry(big_forests))
 
 ```
 
@@ -228,19 +257,19 @@ Often, you also want to plot multiple spatial objects together to see if and how
 
 ```{r plotting-sf, eval=FALSE}
 # Plot the forests object using all defaults
-___(forests)
+plot(forests)
 
 # Plot just the areal_m2 attribute of the forests data
-___(forests[___])
+plot(forests["areal_m2"])
 
 # Create a new object of just the forests geometry
-forests_geo <- ___(forests)
+forests_geo <- st_geometry(forests)
 
 # Plot the geometry of the forests data
-___(forests_geo)
+plot(forests_geo)
 
 # Plot the geometry of the forests and the parks object together
-___(forests_geo, col = "_____");___(parks$geometry, col = _____, add = _____)
+plot(forests_geo, col = "green");plot(parks$geometry, col = "pink", add = TRUE)
 
 ```
 
@@ -267,13 +296,16 @@ Multi-band rasters will have more than one layer. An example is a color aerial p
 
 ```{r loadraster, eval=FALSE, echo=TRUE}
 # Load the raster package
-___(___)
+install.packages("raster")
+library(raster)
+pacman::p_load(rgdal, raster)
+
 
 # Read in the mound elevation single-band raster
-elevation <- ____(___)
+elevation <- raster("../data/DNK_msk_alt.grd")
 
 # Read in the orthophoto image multi-band raster
-aarhus <- brick(_____)
+aarhus <- brick("../data/Aarhus_1m.TIF")
 
 # Get the class for the new objects
 class(___)
