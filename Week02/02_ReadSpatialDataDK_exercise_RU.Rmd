@@ -118,7 +118,7 @@ Spatial objects in `sf` are just data frames with some special properties. This 
 
 ```{r wrangle-parks, eval=FALSE, echo=TRUE}
 # Load the sf and dplyr package
-pacman::p_load(dplyr)
+pacman::p_load(dplyr, sf)
 
 # Use filter() to limit to over5ha parks
 over5ha <- parks %>% 
@@ -308,20 +308,25 @@ elevation <- raster("../data/DNK_msk_alt.grd")
 aarhus <- brick("../data/Aarhus_1m.TIF")
 
 # Get the class for the new objects
-class(___)
-class(___)
+class(elevation) #raster class
+class(aarhus) #raster class
 
 # Identify how many layers each object has
-nlayers(___)
-nlayers(___)
+nlayers(elevation) #1 layer
+nlayers(aarhus) #5 layers
+
+aarhus
 ```
 
 *Questions:*
 
 1. What are the dimensions (number of columns and rows) of the `elevation` raster?
-2. What is the resolution of `aarhus` orthophoto? How many layers does it contain and what do they represent?
+- The elevation raster has 876 columns and 396 rows.
 
-Now you've learned how to read in single and multi-band rasters. You should have noticed, based on the `nlayers()` function, that the `elevation` object has a single layer and the `aarhus` object has four.
+2. What is the resolution of `aarhus` orthophoto? How many layers does it contain and what do they represent?
+- the resolution of "aarhus" is: 1, 1  (x, y), and it has 5 layers. 
+
+Now you've learned how to read in single and multi-band rasters. You should have noticed, based on the `nlayers()` function, that the `elevation` object has a single layer and the `aarhus` object has four. *???? 5 ????*
 
 
 # Task 7: Learn about your raster objects
@@ -336,20 +341,22 @@ Instead of storing raster objects in data frames, the `raster` package stores sp
 
 ```{r load raster, eval=FALSE, echo=TRUE}
 # Get the extent of the elevation and aarhus object
-___(___)
+extent(aarhus)
 
 # Get the CRS of the aarhus and elevation object
-___(___)
+crs(aarhus)
+crs(elevation)
 
 # Determine the number of grid cells in both raster objects
-___(aarhus)
-___(elevation)
+ncell(aarhus) #11115556 cells
+ncell(elevation) # 346896 cells
 ```
 
 
 Great work! Although rasters are not stored as data frames, the metadata can easily be extracted using functions like `extent()`, `crs()` and `ncell()`.
 
 *Question 3: It makes sense that the extents and number of cells for Danish national elevation data and Aarhus city would be different because their sizes diverge, but why are the units so different? What are these units?*
+- I suppose these units are raster cells, and the reason for Aarhus city having more cells could be the fact that it contains 5 layers, while the "elevation" object contains 1 layer and is only partially filled with raster cells (evident from plotting)?. 
 
 
 # Task 8: Plot your raster object
@@ -366,13 +373,14 @@ The raster package has added useful methods for plotting both single and multi-b
 
 ```{r plot raster, eval=FALSE, echo=TRUE }
 # Plot the elevation raster (single raster)
-___
+plot(elevation)
 
 # Plot the aarhus raster (as a single image for each layer)
-___
+plot(aarhus)
 
 # Plot the aarhus raster as an image
-____
+plotRGB(aarhus, stretch= "lin");plotRGB(aarhus, add = TRUE) #lin makes it bright #plotting on top of each other makes no sense
+plotRGB(aarhus, stretch= "lin") #this version is better
 ```
 
 
@@ -395,20 +403,20 @@ When the geographic data you read in with `sf` already has a CRS defined both `s
 
 ```{r crs, eval=FALSE}
 # Determine the CRS for the elevation and playgrounds vector objects
-___(forests)
-___(playgrounds)
+st_crs(forests) #ETRS89 / UTM zone 32N
+st_crs(playgrounds) #none
 
 # Assign the CRS to playgrounds
-crs_1 <- _____
-___(playgrounds) <- crs_1
+crs_1 <- st_crs(forests) #giving playground the same crs as forrest
+st_crs(playgrounds) <- crs_1
+
 
 # Determine the CRS for the aarhus and elevation rasters
-___(aarhus)
-___(elevation)
+crs(aarhus)
+crs(elevation)
 
 # Write here the proj4string for the aarhus layer
-crs_2 <- "___"
-
+crs_2 <- "ETRS_1989_UTM_Zone_32N"
 ```
 
 
@@ -417,7 +425,7 @@ Nice! You can determine what the CRS is using `st_crs()` for vectors or `crs()` 
 <br>
 
 # Task 10:Transform your layers to a common CRS
-In the previous exercise, when you ran `st_crs()` and `crs()` you may have noticed that the CRS' were different for the different layers. The raster layer's CRS began with `+proj=longlat` and the vector layer's began with `+proj=utm`. In order to use these layers together in spatial analysis we will want them to have the same CRS.
+In the previous exercise, when you ran `st_crs()` and `crs()` you may have noticed that the CRS' were different for the different layers. The raster layer's CRS began with `+proj=longlat` and the vector layer's began with `+proj=utm`.*In order to use these layers together in spatial analysis we will want them to have the same CRS*
 
 In this exercise you will transform (sometimes this is called "project") the objects so they share a single CRS. It is generally best to perform spatial analysis with layers that have a projected CRS (and some functions require this). To determine if your object has a projected CRS you can look at the first part of the result from `st_crs()` or `crs()` -- **if it begins with `+proj=longlat` then your CRS is unprojected.**
 
@@ -432,19 +440,17 @@ Note that you will use `method = "ngb"` in your call to `projectRaster()` to pre
 
 ```{r crs-assign, eval=FALSE}
 # Get the CRS from the aarhus object
-the_crs <- ___(aarhus, asText = TRUE)
+the_crs <- crs(aarhus, asText = TRUE)
 
 # Project playgrounds to match the CRS of aarhus
-playgrounds_crs <- ___(playgrounds, crs = ___)
+playgrounds_crs <- st_transform(playgrounds, crs = the_crs)
 
 # Project elevation to match the CRS of aarhus
-elevation_crs <- ___(elevation, crs = ___, method = "ngb")
+elevation_crs <- projectRaster(elevation, crs = the_crs, method = "ngb")
 
 # Look at the CRS to see if they match
-___(playgrounds_crs)
-___(elevation_crs)
-
-
+st_crs(playgrounds_crs)
+st_crs(elevation_crs)
 ```
 
 
@@ -468,11 +474,19 @@ Make sure `sf`, `raster` and `tmap` are loaded in your workspace.
 ```{r plot, eval=FALSE}
 # Plot aarhus and playgrounds (run both lines together)
 # Do you see the playgrounds?
-___(aarhus, stretch = "lin")
-___(playgrounds, add = TRUE)
+plotRGB(aarhus, alpha = 200);plot(playgrounds_crs, add = TRUE,  col = "green", lwd = 3) #unable to make this work
+
+### transform and makeplaygrounds match the CRS of aarhus
+playgrounds_crs <- st_transform(playgrounds, crs = st_crs(aarhus, asText = TRUE))
+
+# Look at the CRS to see if they match --> they do
+st_crs(aarhus)
+st_crs(playgrounds_crs)
+
 
 
 # Simply run the tmap code
+pacman::p_load(tmap) ##unable to load this package.. 
 library(tmap)
 tm_shape(aarhus) + 
     tm_rgb() + 
