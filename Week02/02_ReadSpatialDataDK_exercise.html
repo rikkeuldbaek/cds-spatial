@@ -1351,7 +1351,7 @@ Plotting Spatial Data</a></h2>
                   <p class="author"><span class="glyphicon glyphicon-user"></span> Adela
 Sobotkova</p>
                         <p class="date"><span class="glyphicon glyphicon-calendar"></span> 04/01/2021
-updated 2023-02-12</p>
+updated 2023-02-15</p>
           </div>
    </div>
      
@@ -1538,6 +1538,12 @@ tibble can provide a better print out of the object.</p>
 </div>
 <div id="task-4-extract-geometric-information-from-your-vector-layers" class="section level1">
 <h1>Task 4: Extract geometric information from your vector layers</h1>
+<p>Sometimes you spatial data will come with attributes such as area,
+length, etc. Unless you have just created these yourself, you cannot be
+sure of their provenance and accuracy. They may have also changed in the
+course of your spatial transformations. If you want to know what is the
+actual area of your polygons, then you can extract it directly from the
+geometries.</p>
 <p>There are several functions in <code>sf</code> that allow you to
 access geometric information like area from your vector features. For
 example, the functions <code>st_area()</code> and
@@ -1583,10 +1589,10 @@ forests with <code>unclass(areas)</code> &gt; 200000 (areas greater than
 <span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Create a quick histogram of the areas using hist</span></span>
 <span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="fu">___</span>(___)</span>
 <span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Filter to forests greater than 30000 (square meters)</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Filter to forests greater than 200000 (square meters)</span></span>
 <span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>big_forests <span class="ot">&lt;-</span> ___ <span class="sc">%&gt;%</span> <span class="fu">___</span>(<span class="fu">___</span>(___) <span class="sc">&gt;</span> <span class="dv">200000</span>)</span>
 <span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Can you plot the forests with their names?</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Can you plot the big_forests with their names??(hint: check the plotting section in Task 5 below)</span></span>
 <span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot just the geometry of big_forests</span></span>
@@ -1667,6 +1673,8 @@ multi-band raster called “Aarhus_1m.TIF”).</li>
 raster object you read in.</li>
 <li>Use the <code>nlayers()</code> function to determine how many
 bands/layers are in each object.</li>
+<li>Use the <code>res()</code> function to learn the resolution of the
+image</li>
 </ul>
 <div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Load the raster package</span></span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="fu">___</span>(___)</span>
@@ -1683,7 +1691,11 @@ bands/layers are in each object.</li>
 <span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Identify how many layers each object has</span></span>
 <span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a><span class="fu">nlayers</span>(___)</span>
-<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a><span class="fu">nlayers</span>(___)</span></code></pre></div>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a><span class="fu">nlayers</span>(___)</span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a><span class="co"># Identify the resolution of each raster</span></span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a><span class="fu">___</span>(elevation)</span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a><span class="fu">___</span>(aarhus)</span></code></pre></div>
 <p><em>Questions:</em></p>
 <ol style="list-style-type: decimal">
 <li>What are the dimensions (number of columns and rows) of the
@@ -1694,7 +1706,8 @@ layers does it contain and what do they represent?</li>
 <p>Now you’ve learned how to read in single and multi-band rasters. You
 should have noticed, based on the <code>nlayers()</code> function, that
 the <code>elevation</code> object has a single layer and the
-<code>aarhus</code> object has four.</p>
+<code>aarhus</code> object has five (well, four useful ones, if you plot
+it).</p>
 </div>
 </div>
 <div id="task-7-learn-about-your-raster-objects" class="section level1">
@@ -1771,7 +1784,11 @@ do it?</li>
 <span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>___</span>
 <span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot the aarhus raster as an image</span></span>
-<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>____</span></code></pre></div>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>____</span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot the two images together (on top of one another). Hint: it only works if their CRSes are compatible. Return to this after Task 9 and 10 if the CRSes are different.</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>____</span></code></pre></div>
 <p>Nice work! As you can see, the <code>plot()</code> function can be
 used to plot single layers while the <code>plotRGB()</code> function can
 be used to combine layers into a single image. Plotting two raster
