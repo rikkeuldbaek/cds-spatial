@@ -48,8 +48,8 @@ library(spData)
 
 # To install the spDataLarge uncomment the next line
 
-#install.packages("spDataLarge", repos = "https://geocompr.r-universe.dev")
-#install.packages("spData")
+install.packages("spDataLarge", repos = "https://geocompr.r-universe.dev")
+install.packages("spData")
 library(spDataLarge)
 ```
 

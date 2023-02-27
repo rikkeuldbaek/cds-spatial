@@ -52,9 +52,9 @@ In this exercise you will read in three shapefiles (parks, playgrounds, and fore
 
 ```{r load, eval=FALSE, echo=TRUE}
 # Load the sf package
-pacman::p_load(sf, GDAL, GEOS, PROJ.4)
-install.packages("raster")
-library(raster)
+#pacman::p_load(sf, GDAL, GEOS, PROJ.4)
+#install.packages("raster")
+#library(raster)
 
 
 # Read in the forests shapefile
@@ -118,7 +118,7 @@ Spatial objects in `sf` are just data frames with some special properties. This 
 
 ```{r wrangle-parks, eval=FALSE, echo=TRUE}
 # Load the sf and dplyr package
-pacman::p_load(dplyr, sf)
+pacman::p_load(dplyr)
 
 # Use filter() to limit to over5ha parks
 over5ha <- parks %>% 
@@ -306,8 +306,8 @@ Multi-band rasters will have more than one layer. An example is a color aerial p
 
 ```{r loadraster, eval=FALSE, echo=TRUE}
 # Load the raster package
-install.packages("raster")
-library(raster)
+#install.packages("raster")
+#library(raster)
 pacman::p_load(rgdal, raster)
 
 
@@ -322,7 +322,7 @@ class(elevation) #raster class
 class(aarhus) #raster class
 
 # Identify how many layers each object has
-<<<<<<< HEAD:Week02/02_ReadSpatialDataDK_exercise_RU.Rmd
+
 nlayers(elevation) #1 layer
 nlayers(aarhus) #5 layers
 
@@ -332,9 +332,9 @@ nlayers(___)
 nlayers(___)
 
 # Identify the resolution of each raster
-___(elevation)
-___(aarhus)
->>>>>>> 8d1e0cbfdf86d22c0bd644badd3b87b7c191eba4:Week02/02_ReadSpatialDataDK_exercise.Rmd
+res(elevation)
+res(aarhus)
+
 ```
 
 *Questions:*
@@ -402,16 +402,11 @@ plot(elevation)
 plot(aarhus)
 
 # Plot the aarhus raster as an image
-<<<<<<< HEAD:Week02/02_ReadSpatialDataDK_exercise_RU.Rmd
 plotRGB(aarhus, stretch= "lin");plotRGB(aarhus, add = TRUE) #lin makes it bright #plotting on top of each other makes no sense
 plotRGB(aarhus, stretch= "lin") #this version is better
-=======
-____
-
 
 # Plot the two images together (on top of one another). Hint: it only works if their CRSes are compatible. Return to this after Task 9 and 10 if the CRSes are different.
-____
->>>>>>> 8d1e0cbfdf86d22c0bd644badd3b87b7c191eba4:Week02/02_ReadSpatialDataDK_exercise.Rmd
+
 ```
 
 
@@ -434,13 +429,13 @@ When the geographic data you read in with `sf` already has a CRS defined both `s
 
 ```{r crs, eval=FALSE}
 # Determine the CRS for the elevation and playgrounds vector objects
-st_crs(forests) #ETRS89 / UTM zone 32N
+st_crs(forests) #"EPSG",25832
 st_crs(playgrounds) #none
 
 # Assign the CRS to playgrounds
 crs_1 <- st_crs(forests) #giving playground the same crs as forrest
 st_crs(playgrounds) <- crs_1
-
+st_crs(playgrounds)
 
 # Determine the CRS for the aarhus and elevation rasters
 crs(aarhus)
@@ -473,6 +468,11 @@ Note that you will use `method = "ngb"` in your call to `projectRaster()` to pre
 # Get the CRS from the aarhus object
 the_crs <- crs(aarhus, asText = TRUE)
 
+
+### setting playgrounds crs to Aaarhus
+crs(playgrounds) <- 4326 #the aarhus csr
+
+
 # Project playgrounds to match the CRS of aarhus
 playgrounds_crs <- st_transform(playgrounds, crs = the_crs)
 
@@ -503,12 +503,23 @@ Make sure `sf`, `raster` and `tmap` are loaded in your workspace.
 * Run the given `tmap` code. Note that `tm_rgb()` is used for multi-layered raster
 
 ```{r plot, eval=FALSE}
+#projecting aarhus on playgrounds
+arhus25832 <- projectRaster(aarhus, crs =25832,  method = "ngb")
+
+st_crs(arrhus25832) #should be the same as the playground object
+st_crs(playgrounds_crs) #crs: 25832
+
 # Plot aarhus and playgrounds (run both lines together)
 # Do you see the playgrounds?
-plotRGB(aarhus, alpha = 200);plot(playgrounds_crs, add = TRUE,  col = "green", lwd = 3) #unable to make this work
+plotRGB(arrhus25832, alpha = 200);plot(playgrounds_crs, add = TRUE) #unable to make this work
 
+
+st_crs(playgrounds_crs) == crs(arrhus25832)
+
+crs(aarhus)
 ### transform and makeplaygrounds match the CRS of aarhus
-playgrounds_crs <- st_transform(playgrounds, crs = st_crs(aarhus, asText = TRUE))
+#playgrounds_crs <- st_transform(playgrounds, crs = st_crs(aarhus, asText = TRUE))
+
 
 # Look at the CRS to see if they match --> they do
 st_crs(aarhus)

@@ -38,6 +38,8 @@ library(raster)
 library(tmap)
 library(spData)
 library(spDataLarge)
+
+devtools::install_github("geocompr/geocompkg")
 ```
 
 
