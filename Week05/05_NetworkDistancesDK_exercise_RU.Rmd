@@ -571,6 +571,20 @@ Well done! Now you can see the reachable area within a 20-minute walk, 20-minute
 
 *1. Which areas are not covered by 20-min drive or 20-min bikeride? How big is their total area?*
 ```{r}
+#get midtjylland polygon
+midtjylland <-  getData("GADM", country= "DNK", level=1) #getting a midtjylland polygon
+
+#midtjylland and our isochrones must be of same CRS
+
+#find the areas that does not overlap, 
+st_area(midtjylland)-st_area( st_union(iso_driving, walking and bike))
+
+
+#
+wow nice top dollar <- st_difference(midtjylland, st_union(iso_driving, walking and bike)) #the output is just a polygon
+
+
+
 
 
 
