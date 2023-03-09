@@ -575,13 +575,14 @@ Well done! Now you can see the reachable area within a 20-minute walk, 20-minute
 midtjylland <-  getData("GADM", country= "DNK", level=1) #getting a midtjylland polygon
 
 #midtjylland and our isochrones must be of same CRS
+st_crs(midtjylland) == st_crs(driving_isos) #they're the same
 
 #find the areas that does not overlap, 
-st_area(midtjylland)-st_area( st_union(iso_driving, walking and bike))
+st_area(midtjylland) - st_area(st_union(driving_isos))  #  walking_isos, cycling_isos
 
 
-#
-wow nice top dollar <- st_difference(midtjylland, st_union(iso_driving, walking and bike)) #the output is just a polygon
+## finding the difference
+difference <- st_difference(midtjylland, st_union(iso_driving)) #the output is just a polygon
 
 
 
